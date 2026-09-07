@@ -43,9 +43,10 @@ Layer details live in `/Users/sotetsuk/.claude/plans/marp-cli-editing-running-mo
 
 ## Adding source code
 
-- `src/marp/` — Marp wrapper (engine, theme resolution, frontmatter, slide breaks)
+- `src/marp/` — Marp wrapper (engine, theme resolution, frontmatter, slide breaks, presenter notes comments)
 - `src/editor/` — CodeMirror 6 extension + persistent iframe stage. Anti-flicker invariants live in `stage.ts syncSlides()` and `util/frame.ts paintFrame()` — touch carefully and run L3 + L4.
 - `src/reading/` — Markdown post-processor (overlay + MutationObserver re-mount)
+- `src/export/` — In-app vector PDF export (Chromium printToPDF via Electron webview, pdf-lib presenter note annotations, pre-print canvas image DPI optimization)
 - `src/util/` — `frame.ts` (iframe mount/paint), `hash.ts` (FNV-1a), `debounce.ts`, `images.ts`
 
 ## Versions to keep pinned

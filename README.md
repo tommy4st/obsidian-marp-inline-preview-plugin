@@ -12,6 +12,7 @@ Only files whose YAML frontmatter contains `marp: true` are touched. Everything 
 ## Features
 
 - Marp Core 4 under the hood — same renderer as the official Marp tooling, in pure JavaScript so it works on Obsidian Mobile (iOS & Android).
+- Zero-external-dependency PDF export on desktop — exports vector PDFs with slide dimensions, optional presenter note annotations, and configurable image DPI downsampling without requiring Chrome or external CLI tools.
 - Custom theme support through `.marprc.yml` (vault-root, with a fallback to the slide file's folder), plus the standard frontmatter `theme:` directive.
 - KaTeX math is bundled — no network roundtrips, no broken formulae offline.
 - Marp's per-slide CSS is mounted inside Shadow DOM, so it can't leak into Obsidian's own UI.
@@ -59,13 +60,38 @@ theme: my-theme
 ---
 ```
 
+## Export to PDF
+
+You can export your presentation slides to a clean vector PDF directly inside Obsidian Desktop without installing Google Chrome or external tools:
+
+1. Open a slide file with `marp: true` in its frontmatter.
+2. Open the Command Palette (`Ctrl/Cmd + P`) and select **Marp: Export slide deck to PDF...** (or right-click the note in the file explorer and choose **Export Marp to PDF...**).
+3. Configure your export options:
+   - **Output file path**: Vault-relative path for the exported `.pdf` file (defaults to `<note-name>.pdf`).
+   - **Image quality / DPI**:
+     - *Original*: No downsampling or re-compression.
+     - *High (~300 DPI, 4K max)*: High-resolution output for physical printing.
+     - *Medium (~150 DPI, 1080p max)*: Recommended balance for digital presentations and email (reduces file size by 70–90% for photo-heavy decks).
+     - *Low (~96 DPI, 720p max)*: Smallest file size.
+   - **Include presenter notes**: Embeds speaker notes (HTML comments `<!-- ... -->`) as standard PDF sticky note annotations on each slide page, matching `marp-cli --pdf-notes`.
+   - **Open after export**: Opens the generated PDF in Obsidian upon completion.
+4. Click **Export**.
+
 ## Settings
 
+### Preview & Math
 - **Inline preview in edit mode** — toggle the CodeMirror widget.
 - **Full preview in reading mode** — toggle the deck render.
 - **Math rendering** — `KaTeX` (bundled) or `Off`.
 
-Command palette: `Marp Inline Preview: Refresh Marp previews` forces a full reload (useful after editing a theme file from outside Obsidian).
+### PDF Export
+- **Include presenter notes** — default toggle for embedding speaker note annotations.
+- **Open PDF after export** — default toggle for auto-opening exported PDFs.
+- **Default image quality / DPI** — default raster image downsampling preset (`Original`, `High`, `Medium`, or `Low`).
+
+### Commands
+- `Marp Inline Preview: Refresh Marp previews` — forces a full reload of previews and themes.
+- `Marp: Export slide deck to PDF...` — opens the PDF export dialog for the active Marp note.
 
 ## Install: build locally and copy into another vault
 
@@ -157,20 +183,30 @@ Project layout:
 
 ```
 src/
-├── main.ts              Plugin entry: register processors, settings, events
+├── main.ts              Plugin entry: register processors, settings, events, commands
 ├── settings.ts          Settings model + PluginSettingTab
+├── export/              In-app PDF export subsystem
+│   ├── service.ts       Pipeline orchestrator
+│   ├── printer.ts       Electron <webview> manager + pre-print image optimization
+│   ├── notes.ts         PDF annotation injector (pdf-lib)
+│   ├── exportModal.ts   Export options modal dialog
+│   ├── template.ts      Printable HTML payload builder
+│   └── types.ts         Export options and presets
 ├── marp/
-│   ├── engine.ts        Marp Core wrapper (themes, render helpers)
+│   ├── engine.ts        Marp Core wrapper (themes, render helpers, comments)
 │   ├── themes.ts        .marprc.yml discovery and theme registration
 │   └── slides.ts        Slide-break detection (frontmatter & fence aware)
 ├── reading/
 │   └── postProcessor.ts MarkdownPostProcessor that replaces the preview section
 ├── editor/
-│   ├── extension.ts     CM6 ViewPlugin that adds block widgets after each break
-│   └── widget.ts        WidgetType using Shadow DOM
+│   ├── extension.ts     CM6 ViewPlugin that coordinates slide widgets
+│   ├── stage.ts         Persistent iframe stage container
+│   └── widget.ts        Block widget declarations
 └── util/
     ├── debounce.ts
-    └── shadow.ts        Shadow-root mounting helpers
+    ├── frame.ts         Iframe mounting and layout helpers
+    ├── hash.ts          FNV-1a hash
+    └── images.ts        Vault asset path rewriting
 ```
 
 ## Mobile notes

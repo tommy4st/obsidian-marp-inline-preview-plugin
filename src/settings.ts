@@ -1,12 +1,15 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type MarpInlinePreviewPlugin from './main';
 
+export type ExportImageQuality = 'original' | 'high' | 'medium' | 'low';
+
 export interface MarpSettings {
   editPreview: boolean;
   readingPreview: boolean;
   math: 'katex' | 'off';
   exportIncludeNotes: boolean;
   exportOpenAfter: boolean;
+  exportImageQuality: ExportImageQuality;
 }
 
 export const DEFAULT_SETTINGS: MarpSettings = {
@@ -15,6 +18,7 @@ export const DEFAULT_SETTINGS: MarpSettings = {
   math: 'katex',
   exportIncludeNotes: false,
   exportOpenAfter: true,
+  exportImageQuality: 'medium',
 };
 
 /** Fixed debounce for edit-mode rebuilds. Was tunable via settings; pinned here. */
@@ -88,6 +92,22 @@ export class MarpSettingTab extends PluginSettingTab {
           this.plugin.settings.exportOpenAfter = v;
           await this.plugin.saveSettings();
         }),
+      );
+
+    new Setting(containerEl)
+      .setName('Default image quality / DPI')
+      .setDesc('Optimize raster image resolution and compression to reduce PDF file size.')
+      .addDropdown((d) =>
+        d
+          .addOption('original', 'Original (No compression)')
+          .addOption('high', 'High (~300 DPI, 4K max)')
+          .addOption('medium', 'Medium (~150 DPI, 1080p max)')
+          .addOption('low', 'Low (~96 DPI, 720p max)')
+          .setValue(this.plugin.settings.exportImageQuality)
+          .onChange(async (v: ExportImageQuality) => {
+            this.plugin.settings.exportImageQuality = v;
+            await this.plugin.saveSettings();
+          }),
       );
   }
 }

@@ -1,11 +1,12 @@
 import { Modal, Setting, Notice, normalizePath } from 'obsidian';
 import type MarpInlinePreviewPlugin from '../main';
-import type { PdfExportOptions } from './types';
+import type { ImageQualityPreset, PdfExportOptions } from './types';
 
 export class ExportPdfModal extends Modal {
   private targetPath: string;
   private includeNotes: boolean;
   private openAfterExport: boolean;
+  private imageQuality: ImageQualityPreset;
   private onExport: (options: PdfExportOptions) => Promise<void>;
   private isExporting = false;
 
@@ -18,6 +19,7 @@ export class ExportPdfModal extends Modal {
     this.targetPath = defaultTargetPath;
     this.includeNotes = plugin.settings.exportIncludeNotes;
     this.openAfterExport = plugin.settings.exportOpenAfter;
+    this.imageQuality = plugin.settings.exportImageQuality;
     this.onExport = onExport;
   }
 
@@ -34,6 +36,21 @@ export class ExportPdfModal extends Modal {
           .setValue(this.targetPath)
           .onChange((value) => {
             this.targetPath = value.trim();
+          }),
+      );
+
+    new Setting(contentEl)
+      .setName('Image quality / DPI')
+      .setDesc('Optimize raster images to reduce exported PDF file size')
+      .addDropdown((drop) =>
+        drop
+          .addOption('original', 'Original (No compression)')
+          .addOption('high', 'High (~300 DPI, 4K max)')
+          .addOption('medium', 'Medium (~150 DPI, 1080p max)')
+          .addOption('low', 'Low (~96 DPI, 720p max)')
+          .setValue(this.imageQuality)
+          .onChange((value) => {
+            this.imageQuality = value as ImageQualityPreset;
           }),
       );
 
@@ -78,14 +95,16 @@ export class ExportPdfModal extends Modal {
           btn.setDisabled(true);
           btn.setButtonText('Exporting...');
 
-          // Retain settings
+          // Retain user settings
           this.plugin.settings.exportIncludeNotes = this.includeNotes;
           this.plugin.settings.exportOpenAfter = this.openAfterExport;
+          this.plugin.settings.exportImageQuality = this.imageQuality;
           await this.plugin.saveSettings();
 
           try {
             await this.onExport({
               includeNotes: this.includeNotes,
+              imageQuality: this.imageQuality,
               targetPath: normalized,
               openAfterExport: this.openAfterExport,
             });

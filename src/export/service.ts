@@ -50,8 +50,10 @@ export async function exportDeckToPdf(
     // 1. Build printable HTML payload
     const printPayload = buildExportHtml(fullHtml, fullCss, title);
 
-    // 2. Print to vector PDF via offscreen webview
-    let pdfBytes = await printHtmlToPdf(printPayload);
+    // 2. Print to vector PDF via offscreen webview with image optimization
+    let pdfBytes = await printHtmlToPdf(printPayload, {
+      imageQuality: options.imageQuality,
+    });
 
     // 3. Post-process with pdf-lib if presenter notes requested
     if (options.includeNotes) {
