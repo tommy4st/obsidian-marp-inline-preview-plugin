@@ -77,6 +77,36 @@ You can export your presentation slides to a clean vector PDF directly inside Ob
    - **Open after export**: Opens the generated PDF in Obsidian upon completion.
 4. Click **Export**.
 
+## Presentation & Presenter View
+
+Present your slide deck directly within Obsidian or across dual monitors with a dedicated speaker companion screen:
+
+1. Open any slide file with `marp: true` in its frontmatter.
+2. Open the Command Palette (`Ctrl/Cmd + P`) and choose **Marp: Start presentation** (or right-click the note and select **Start Marp presentation**).
+
+### Features
+
+- **Audience Presentation View**:
+  - Automatically launches in fullscreen (on the second screen when dual displays are detected, leaving your main Obsidian window free).
+  - Maintains 16:9 aspect ratio with auto-scaling and letterboxing.
+  - Laser pointer tool: press `L` or click the laser icon in the HUD to toggle a simple blurred red laser dot. Click and drag to draw smooth fading trails without accidentally advancing slides.
+  - Auto-hiding HUD toolbar with slide progress, laser pointer toggle, and navigation buttons.
+  - Keyboard navigation: `Space` / `ArrowRight` / `PageDown` to advance; `ArrowLeft` / `PageUp` to go back; `Home` / `End` for first/last slide.
+  - Screen blanking: press `B` or `.` for blackout, `W` for whiteout.
+  - Fullscreen toggle with `F`.
+  - Touch swipe navigation support on mobile and tablets.
+  - Live reload: edits to the slide file automatically update the presentation in real time.
+
+
+- **Presenter View (Speaker Dashboard)**:
+  - Opens conveniently in an Obsidian tab by pressing `P` or selecting **Marp: Open presenter view**.
+  - **Current & Next Slide Previews**: See what the audience sees plus an upcoming preview of the next slide.
+  - **Rich Speaker Notes**: Slide comments (`<!-- ... -->`) are rendered as formatted Markdown with adjustable font sizes (`A-` / `A+`).
+  - **Timer & Wall Clock**: Built-in stopwatch with Start/Pause/Reset controls plus local wall clock.
+  - **Slide Jump Selector**: Dropdown to instantly jump to any slide in the deck.
+  - **Two-Way Synchronization**: Advancing slides or toggling blank screens in either view synchronizes immediately.
+  - Option to automatically open the Presenter View in an Obsidian tab whenever a presentation starts (configured in Settings).
+
 ## Settings
 
 ### Preview & Math
@@ -84,7 +114,11 @@ You can export your presentation slides to a clean vector PDF directly inside Ob
 - **Full preview in reading mode** — toggle the deck render.
 - **Math rendering** — `KaTeX` (bundled) or `Off`.
 
+### Presentation
+- **Auto-open presenter view** — automatically open the Presenter View in a separate window when starting a presentation (Desktop only).
+
 ### PDF Export
+
 - **Include presenter notes** — default toggle for embedding speaker note annotations.
 - **Open PDF after export** — default toggle for auto-opening exported PDFs.
 - **Default image quality / DPI** — default raster image downsampling preset (`Original`, `High`, `Medium`, or `Low`).

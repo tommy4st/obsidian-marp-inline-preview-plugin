@@ -38,3 +38,68 @@ g.createEl = function createEl(tag, opts) {
 g.createDiv = function createDiv(opts) {
   return g.createEl!('div', opts);
 };
+
+if (typeof Element !== 'undefined') {
+  const proto = Element.prototype as any;
+  if (!proto.empty) {
+    proto.empty = function () {
+      while (this.firstChild) this.removeChild(this.firstChild);
+    };
+  }
+  if (!proto.addClass) {
+    proto.addClass = function (...cls: string[]) {
+      this.classList.add(...cls);
+    };
+  }
+  if (!proto.removeClass) {
+    proto.removeClass = function (...cls: string[]) {
+      this.classList.remove(...cls);
+    };
+  }
+  if (!proto.toggleClass) {
+    proto.toggleClass = function (cls: string, val?: boolean) {
+      return this.classList.toggle(cls, val);
+    };
+  }
+  if (!proto.createEl) {
+    proto.createEl = function (tag: any, opts: any) {
+      const el = g.createEl!(tag, opts);
+      this.appendChild(el);
+      return el;
+    };
+  }
+  if (!proto.createDiv) {
+    proto.createDiv = function (opts: any) {
+      return this.createEl('div', opts);
+    };
+  }
+  if (!proto.setText) {
+    proto.setText = function (val: string) {
+      this.textContent = val;
+    };
+  }
+}
+
+if (typeof HTMLCanvasElement !== 'undefined') {
+  const orig = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (type: string, ...args: any[]) {
+    if (type === '2d') {
+      return {
+        clearRect: () => {},
+        beginPath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        closePath: () => {},
+        stroke: () => {},
+        arc: () => {},
+        fill: () => {},
+        save: () => {},
+        restore: () => {},
+        scale: () => {},
+      };
+    }
+    return orig?.call(this, type, ...args);
+  };
+}
+
+

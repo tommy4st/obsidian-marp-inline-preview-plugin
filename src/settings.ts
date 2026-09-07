@@ -10,6 +10,7 @@ export interface MarpSettings {
   exportIncludeNotes: boolean;
   exportOpenAfter: boolean;
   exportImageQuality: ExportImageQuality;
+  autoOpenPresenterView: boolean;
 }
 
 export const DEFAULT_SETTINGS: MarpSettings = {
@@ -19,7 +20,9 @@ export const DEFAULT_SETTINGS: MarpSettings = {
   exportIncludeNotes: false,
   exportOpenAfter: true,
   exportImageQuality: 'medium',
+  autoOpenPresenterView: false,
 };
+
 
 /** Fixed debounce for edit-mode rebuilds. Was tunable via settings; pinned here. */
 export const DEBOUNCE_MS = 300;
@@ -109,5 +112,18 @@ export class MarpSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    containerEl.createEl('h3', { text: 'Presentation' });
+
+    new Setting(containerEl)
+      .setName('Auto-open presenter view')
+      .setDesc('Automatically open the Presenter View in an Obsidian tab when starting a presentation.')
+      .addToggle((t) =>
+        t.setValue(this.plugin.settings.autoOpenPresenterView).onChange(async (v) => {
+          this.plugin.settings.autoOpenPresenterView = v;
+          await this.plugin.saveSettings();
+        }),
+      );
   }
 }
+

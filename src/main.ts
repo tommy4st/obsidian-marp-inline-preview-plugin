@@ -6,6 +6,11 @@ import { buildEditorExtension, refreshSlides } from './editor/extension';
 import type { EditorView } from '@codemirror/view';
 import { DEBOUNCE_MS, DEFAULT_SETTINGS, MarpSettingTab, MarpSettings } from './settings';
 import { openPdfExportModal } from './export/service';
+import { MARP_PRESENTATION_VIEW_TYPE, MARP_PRESENTER_VIEW_TYPE } from './presentation/types';
+import { MarpPresentationView } from './presentation/presentationView';
+import { MarpPresenterView } from './presentation/presenterView';
+import { startPresentation, openPresenterView } from './presentation/service';
+
 
 export default class MarpInlinePreviewPlugin extends Plugin {
   settings: MarpSettings = { ...DEFAULT_SETTINGS };
@@ -50,6 +55,16 @@ export default class MarpInlinePreviewPlugin extends Plugin {
       }),
     );
 
+    this.registerView(
+      MARP_PRESENTATION_VIEW_TYPE,
+      (leaf) => new MarpPresentationView(leaf, this),
+    );
+
+    this.registerView(
+      MARP_PRESENTER_VIEW_TYPE,
+      (leaf) => new MarpPresenterView(leaf, this),
+    );
+
     this.addSettingTab(new MarpSettingTab(this.app, this));
 
     this.addCommand({
@@ -59,6 +74,40 @@ export default class MarpInlinePreviewPlugin extends Plugin {
         this.themes.invalidate();
         this.refreshActiveEditors();
         this.refreshActiveReadingViews();
+      },
+    });
+
+    this.addCommand({
+      id: 'marp-start-presentation',
+      name: 'Start presentation',
+      checkCallback: (checking: boolean) => {
+        const file = this.app.workspace.getActiveFile();
+        if (!file) return false;
+        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const isMarp = fm?.marp === true || fm?.marp === 'true';
+        if (!isMarp) return false;
+
+        if (!checking) {
+          void startPresentation(this.app, this, file);
+        }
+        return true;
+      },
+    });
+
+    this.addCommand({
+      id: 'marp-open-presenter-view',
+      name: 'Open presenter view',
+      checkCallback: (checking: boolean) => {
+        const file = this.app.workspace.getActiveFile();
+        if (!file) return false;
+        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const isMarp = fm?.marp === true || fm?.marp === 'true';
+        if (!isMarp) return false;
+
+        if (!checking) {
+          void openPresenterView(this.app, this, file);
+        }
+        return true;
       },
     });
 
@@ -84,12 +133,30 @@ export default class MarpInlinePreviewPlugin extends Plugin {
       },
     });
 
-    if (Platform.isDesktop) {
-      this.registerEvent(
-        this.app.workspace.on('file-menu', (menu, file) => {
-          if (file instanceof TFile && file.extension === 'md') {
-            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
-            if (fm?.marp === true || fm?.marp === 'true') {
+    this.registerEvent(
+      this.app.workspace.on('file-menu', (menu, file) => {
+        if (file instanceof TFile && file.extension === 'md') {
+          const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+          if (fm?.marp === true || fm?.marp === 'true') {
+            menu.addItem((item) => {
+              item
+                .setTitle('Start Marp presentation')
+                .setIcon('presentation')
+                .onClick(() => {
+                  void startPresentation(this.app, this, file);
+                });
+            });
+
+            menu.addItem((item) => {
+              item
+                .setTitle('Open Marp presenter view')
+                .setIcon('presentation')
+                .onClick(() => {
+                  void openPresenterView(this.app, this, file);
+                });
+            });
+
+            if (Platform.isDesktop) {
               menu.addItem((item) => {
                 item
                   .setTitle('Export Marp to PDF...')
@@ -104,10 +171,11 @@ export default class MarpInlinePreviewPlugin extends Plugin {
               });
             }
           }
-        }),
-      );
-    }
+        }
+      }),
+    );
   }
+
 
   onunload(): void {
     // All registrations are auto-cleaned by Obsidian.

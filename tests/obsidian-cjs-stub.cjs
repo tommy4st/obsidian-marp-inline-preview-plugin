@@ -11,6 +11,7 @@ class Plugin {
   }
   registerEditorExtension() {}
   registerMarkdownPostProcessor() {}
+  registerView() {}
   registerEvent() {}
   addSettingTab() {}
   addCommand() {}
@@ -61,6 +62,71 @@ const Platform = {
   isMobile: false,
 };
 
+class Component {
+  load() {}
+  onload() {}
+  unload() {}
+  onunload() {}
+  addChild(c) { return c; }
+  removeChild(c) { return c; }
+  register() {}
+  registerEvent() {}
+  registerInterval(id) { return id; }
+}
+
+class Scope {
+  register() {}
+}
+
+class WorkspaceLeaf {
+  constructor(app) {
+    this.app = app;
+  }
+  async setViewState() {}
+  getViewState() { return {}; }
+  detach() {}
+}
+
+class ItemView extends Component {
+  constructor(leaf) {
+    super();
+    this.leaf = leaf;
+    this.app = leaf?.app;
+    this.containerEl = {
+      createEl() { return {}; },
+      createDiv() { return {}; },
+      appendChild() {},
+      querySelector() { return null; },
+      querySelectorAll() { return []; },
+      classList: { add() {}, remove() {}, contains() { return false; } },
+      style: {},
+      addEventListener() {},
+      removeEventListener() {},
+    };
+    this.contentEl = this.containerEl;
+    this.navigation = false;
+    this.scope = null;
+  }
+  getViewType() { return 'item-view'; }
+  getDisplayText() { return 'Item View'; }
+  getIcon() { return 'document'; }
+  async onOpen() {}
+  async onClose() {}
+  getState() { return {}; }
+  async setState() {}
+  addAction() { return {}; }
+}
+
+class MarkdownRenderer {
+  static async render(_app, markdown, el) {
+    if (el) el.innerHTML = markdown;
+  }
+}
+
+function setIcon(parent, iconId) {
+  if (parent?.setAttribute) parent.setAttribute('data-icon', iconId);
+}
+
 function normalizePath(p) {
   let s = String(p || '').replace(/\\/g, '/').replace(/\/{2,}/g, '/');
   if (s.length > 1 && s.endsWith('/')) s = s.slice(0, -1);
@@ -77,5 +143,12 @@ module.exports = {
   Modal,
   Notice,
   Platform,
+  Component,
+  Scope,
+  WorkspaceLeaf,
+  ItemView,
+  MarkdownRenderer,
+  setIcon,
   normalizePath,
 };
+

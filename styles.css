@@ -93,3 +93,391 @@
   display: block;
   width: 100%;
 }
+
+/*
+ * Presentation Mode (Audience Display)
+ */
+.marp-presentation-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  overflow: hidden;
+  outline: none;
+  user-select: none;
+}
+
+.marp-presentation-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.marp-presentation-slide-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+}
+
+.marp-presentation-blank-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.marp-presentation-blank-overlay.is-blackout {
+  opacity: 1;
+  background: #000000;
+  pointer-events: auto;
+}
+
+.marp-presentation-blank-overlay.is-whiteout {
+  opacity: 1;
+  background: #ffffff;
+  pointer-events: auto;
+}
+
+.marp-presentation-hud {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  transition: all 0.25s ease;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(24, 24, 28, 0.88);
+  backdrop-filter: blur(12px);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.marp-presentation-hud.is-visible,
+.marp-presentation-hud:hover {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.marp-presentation-hud-counter {
+  color: #eeeeee;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 8px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.marp-presentation-hud-btn {
+  background: transparent;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.marp-presentation-hud-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.marp-presentation-hud-btn.is-active {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.25);
+}
+
+.marp-laser-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 25;
+  display: none;
+}
+
+.marp-presentation-view.is-cursor-hidden,
+.marp-presentation-view.is-cursor-hidden * {
+  cursor: none !important;
+}
+
+.marp-presentation-view.is-laser-active,
+.marp-presentation-view.is-laser-active .marp-presentation-stage,
+.marp-presentation-view.is-laser-active .marp-presentation-slide-wrapper {
+  cursor: none !important;
+}
+
+.marp-presentation-view.is-laser-active .marp-laser-canvas {
+  display: block;
+}
+
+.marp-presentation-view.is-laser-active .marp-presentation-hud {
+  cursor: default;
+}
+
+.marp-presentation-view.is-laser-active .marp-presentation-hud-btn {
+  cursor: pointer;
+}
+
+
+/*
+ * Presenter View (Speaker Dashboard)
+ */
+.marp-presenter-view {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  overflow: hidden;
+  font-family: var(--font-interface);
+  outline: none;
+}
+
+.marp-presenter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.marp-presenter-timer-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.marp-presenter-timer-text {
+  font-family: var(--font-monospace);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.marp-presenter-clock-box {
+  display: flex;
+  align-items: center;
+}
+
+.marp-presenter-clock-text {
+  font-family: var(--font-monospace);
+  font-size: 16px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.marp-presenter-select {
+  padding: 4px 10px;
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.marp-presenter-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+  gap: 14px;
+  padding: 14px;
+  background: var(--background-primary);
+}
+
+@media (max-width: 768px) {
+  .marp-presenter-grid {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+}
+
+.marp-presenter-previews-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  height: 100%;
+  min-height: 0;
+}
+
+.marp-presenter-notes-col {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  min-height: 0;
+}
+
+.marp-presenter-slide-card,
+.marp-presenter-notes-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 6px);
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+
+.marp-presenter-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary-alt);
+}
+
+.marp-presenter-viewport {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+  min-height: 140px;
+}
+
+.marp-presenter-slide-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+}
+
+.marp-presenter-notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary-alt);
+  padding-right: 8px;
+}
+
+.marp-presenter-notes-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  line-height: 1.6;
+  user-select: text;
+}
+
+.marp-presenter-no-notes {
+  color: var(--text-faint);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+.marp-presenter-font-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.marp-presenter-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.marp-presenter-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.marp-presenter-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.marp-presenter-icon-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-accent);
+}
+
+.marp-presenter-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.marp-presenter-toggle-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.marp-presenter-toggle-btn:hover {
+  color: var(--text-normal);
+  border-color: var(--text-muted);
+}
+
+.marp-presenter-toggle-btn.is-active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-weight: 600;
+  border-color: var(--interactive-accent);
+}
+
+.marp-presenter-status {
+  display: flex;
+  align-items: center;
+}
+
+.marp-presenter-badge {
+  font-size: 12px;
+  color: var(--text-success, #48bb78);
+  font-weight: 500;
+}
+
