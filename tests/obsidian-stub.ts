@@ -14,3 +14,21 @@ export const normalizePath = (p: string): string => {
 };
 export class TFile {}
 export class App {}
+export class Modal {
+  app: App;
+  contentEl: HTMLElement;
+  constructor(app: App) {
+    this.app = app;
+    this.contentEl = document.createElement('div');
+  }
+  open(): void {}
+  close(): void {}
+}
+export class Notice {
+  constructor(_message: string, _timeout?: number) {}
+  hide(): void {}
+}
+export const Platform = {
+  isDesktop: true,
+  isMobile: false,
+};

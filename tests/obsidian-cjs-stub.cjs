@@ -27,12 +27,39 @@ class Setting {
   constructor() { return this; }
   setName() { return this; }
   setDesc() { return this; }
-  addText() { return this; }
-  addToggle() { return this; }
-  addDropdown() { return this; }
+  addText(cb) { cb?.(this); return this; }
+  addToggle(cb) { cb?.(this); return this; }
+  addDropdown(cb) { cb?.(this); return this; }
+  addButton(cb) { cb?.(this); return this; }
+  addOption() { return this; }
+  setValue() { return this; }
+  onChange() { return this; }
+  setButtonText() { return this; }
+  setCta() { return this; }
+  setDisabled() { return this; }
+  onClick() { return this; }
 }
 class MarkdownView {}
 class TFile {}
+class Modal {
+  constructor(app) {
+    this.app = app;
+    this.contentEl = {
+      empty() {},
+      createEl() { return {}; },
+    };
+  }
+  open() {}
+  close() {}
+}
+class Notice {
+  constructor() {}
+  hide() {}
+}
+const Platform = {
+  isDesktop: true,
+  isMobile: false,
+};
 
 function normalizePath(p) {
   let s = String(p || '').replace(/\\/g, '/').replace(/\/{2,}/g, '/');
@@ -47,5 +74,8 @@ module.exports = {
   Setting,
   MarkdownView,
   TFile,
+  Modal,
+  Notice,
+  Platform,
   normalizePath,
 };

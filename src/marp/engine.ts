@@ -38,13 +38,13 @@ export class MarpEngine {
     }
   }
 
-  render(markdown: string): { html: string; css: string } {
-    const { html, css } = this.marp.render(markdown, { htmlAsArray: false });
-    return { html: html as string, css };
+  render(markdown: string): { html: string; css: string; comments: string[][] } {
+    const { html, css, comments } = this.marp.render(markdown, { htmlAsArray: false });
+    return { html: html as string, css, comments: (comments as string[][]) ?? [] };
   }
 
-  renderArray(markdown: string): { html: string[]; css: string } {
-    const { html, css } = this.marp.render(markdown, { htmlAsArray: true });
-    return { html: html as string[], css };
+  renderArray(markdown: string): { html: string[]; css: string; comments: string[][] } {
+    const { html, css, comments } = this.marp.render(markdown, { htmlAsArray: true });
+    return { html: html as string[], css, comments: (comments as string[][]) ?? [] };
   }
 }

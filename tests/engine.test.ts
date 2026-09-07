@@ -74,4 +74,26 @@ describe('MarpEngine.render / renderArray', () => {
     const e = new MarpEngine({ math: 'katex' });
     expect(() => e.registerTheme('not actually a theme')).not.toThrow();
   });
+
+  it('extracts presenter notes and strips directives into comments array', () => {
+    const e = new MarpEngine({ math: 'katex' });
+    const md = `
+# Slide 1
+<!-- Speaker note for slide 1 -->
+---
+<!-- _class: lead -->
+# Slide 2
+<!--
+Multi-line note
+for slide 2
+-->
+---
+# Slide 3
+`;
+    const res = e.render(md);
+    expect(res.comments).toHaveLength(3);
+    expect(res.comments[0]).toEqual(['Speaker note for slide 1']);
+    expect(res.comments[1][0]).toContain('Multi-line note');
+    expect(res.comments[2]).toEqual([]);
+  });
 });

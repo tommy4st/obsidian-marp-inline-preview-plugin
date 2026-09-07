@@ -1,10 +1,11 @@
-import { Plugin, MarkdownView, TFile } from 'obsidian';
+import { Plugin, MarkdownView, TFile, Platform } from 'obsidian';
 import { MarpEngine } from './marp/engine';
 import { ThemeResolver } from './marp/themes';
 import { buildReadingPostProcessor } from './reading/postProcessor';
 import { buildEditorExtension, refreshSlides } from './editor/extension';
 import type { EditorView } from '@codemirror/view';
 import { DEBOUNCE_MS, DEFAULT_SETTINGS, MarpSettingTab, MarpSettings } from './settings';
+import { openPdfExportModal } from './export/service';
 
 export default class MarpInlinePreviewPlugin extends Plugin {
   settings: MarpSettings = { ...DEFAULT_SETTINGS };
@@ -60,6 +61,52 @@ export default class MarpInlinePreviewPlugin extends Plugin {
         this.refreshActiveReadingViews();
       },
     });
+
+    this.addCommand({
+      id: 'marp-export-pdf',
+      name: 'Export slide deck to PDF...',
+      checkCallback: (checking: boolean) => {
+        if (!Platform.isDesktop) return false;
+        const file = this.app.workspace.getActiveFile();
+        if (!file) return false;
+        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const isMarp = fm?.marp === true || fm?.marp === 'true';
+        if (!isMarp) return false;
+
+        if (!checking) {
+          openPdfExportModal(file, {
+            plugin: this,
+            engine: this.engine,
+            themes: this.themes,
+          });
+        }
+        return true;
+      },
+    });
+
+    if (Platform.isDesktop) {
+      this.registerEvent(
+        this.app.workspace.on('file-menu', (menu, file) => {
+          if (file instanceof TFile && file.extension === 'md') {
+            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+            if (fm?.marp === true || fm?.marp === 'true') {
+              menu.addItem((item) => {
+                item
+                  .setTitle('Export Marp to PDF...')
+                  .setIcon('file-text')
+                  .onClick(() => {
+                    openPdfExportModal(file, {
+                      plugin: this,
+                      engine: this.engine,
+                      themes: this.themes,
+                    });
+                  });
+              });
+            }
+          }
+        }),
+      );
+    }
   }
 
   onunload(): void {

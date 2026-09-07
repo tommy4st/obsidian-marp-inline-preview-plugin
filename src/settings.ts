@@ -5,12 +5,16 @@ export interface MarpSettings {
   editPreview: boolean;
   readingPreview: boolean;
   math: 'katex' | 'off';
+  exportIncludeNotes: boolean;
+  exportOpenAfter: boolean;
 }
 
 export const DEFAULT_SETTINGS: MarpSettings = {
   editPreview: true,
   readingPreview: true,
   math: 'katex',
+  exportIncludeNotes: false,
+  exportOpenAfter: true,
 };
 
 /** Fixed debounce for edit-mode rebuilds. Was tunable via settings; pinned here. */
@@ -62,6 +66,28 @@ export class MarpSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
             this.plugin.rebuildEngine();
           }),
+      );
+
+    containerEl.createEl('h3', { text: 'PDF Export' });
+
+    new Setting(containerEl)
+      .setName('Include presenter notes')
+      .setDesc('Add presenter notes as PDF sticky note annotations by default.')
+      .addToggle((t) =>
+        t.setValue(this.plugin.settings.exportIncludeNotes).onChange(async (v) => {
+          this.plugin.settings.exportIncludeNotes = v;
+          await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName('Open PDF after export')
+      .setDesc('Open the exported PDF in Obsidian by default after completion.')
+      .addToggle((t) =>
+        t.setValue(this.plugin.settings.exportOpenAfter).onChange(async (v) => {
+          this.plugin.settings.exportOpenAfter = v;
+          await this.plugin.saveSettings();
+        }),
       );
   }
 }
