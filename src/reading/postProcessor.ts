@@ -3,7 +3,7 @@ import type { MarpEngine } from '../marp/engine';
 import type { ThemeResolver } from '../marp/themes';
 import { injectThemeIfMissing } from '../marp/frontmatter';
 import { mountDeck } from '../util/frame';
-import { rewriteImageSrcs } from '../util/images';
+import { rewriteImageSrcs, rewriteCssUrls } from '../util/images';
 import { fnv1a32 } from '../util/hash';
 
 export type ReadingDeps = {
@@ -61,7 +61,7 @@ export function buildReadingPostProcessor(deps: ReadingDeps): MarkdownPostProces
 
       const rendered = deps.engine.renderArray(md);
       const slides = rendered.html.map((h) => rewriteImageSrcs(h, ctx.sourcePath, deps.app));
-      const css = rendered.css;
+      const css = rewriteCssUrls(rendered.css, ctx.sourcePath, deps.app);
       mountOverlay(host, slides, css);
       renderState.set(host, { hash: wantHash, slides, css });
       ensureObserver(host);

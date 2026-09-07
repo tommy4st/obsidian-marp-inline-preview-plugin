@@ -14,7 +14,7 @@ import { injectThemeIfMissing } from '../marp/frontmatter';
 import { SlidePlaceholder } from './widget';
 import { SlideStage, type SlideContent } from './stage';
 import { debounce } from '../util/debounce';
-import { rewriteImageSrcs } from '../util/images';
+import { rewriteImageSrcs, rewriteCssUrls } from '../util/images';
 
 export type EditorDeps = {
   app: App;
@@ -139,7 +139,7 @@ export function buildEditorExtension(deps: EditorDeps): Extension {
           const mdForMarp = fmTheme ? rawSrc : injectThemeIfMissing(rawSrc, theme);
 
           const rendered = deps.engine.renderArray(mdForMarp);
-          const fullCss = rendered.css;
+          const fullCss = rewriteCssUrls(rendered.css, file.path, deps.app);
           const slides: SlideContent[] = rendered.html.map((h) => ({
             html: rewriteImageSrcs(h, file.path, deps.app),
             css: fullCss,
@@ -214,4 +214,3 @@ function resolveFile(app: App, view: EditorView): TFile | null {
   });
   return found ?? app.workspace.getActiveFile();
 }
-
