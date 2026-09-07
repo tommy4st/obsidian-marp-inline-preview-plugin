@@ -3,8 +3,18 @@ import type MarpInlinePreviewPlugin from './main';
 
 export type ExportImageQuality = 'original' | 'high' | 'medium' | 'low';
 
+export type EditPreviewMaxWidth =
+  | 'editor'
+  | '800px'
+  | '1000px'
+  | 'full'
+  | 'custom';
+
 export interface MarpSettings {
   editPreview: boolean;
+  editPreviewMaxWidth: EditPreviewMaxWidth;
+  customEditPreviewWidth: string;
+  limitEditPreviewWidth?: boolean;
   readingPreview: boolean;
   math: 'katex' | 'off';
   exportIncludeNotes: boolean;
@@ -15,6 +25,8 @@ export interface MarpSettings {
 
 export const DEFAULT_SETTINGS: MarpSettings = {
   editPreview: true,
+  editPreviewMaxWidth: 'editor',
+  customEditPreviewWidth: '800px',
   readingPreview: true,
   math: 'katex',
   exportIncludeNotes: false,
@@ -49,6 +61,42 @@ export class MarpSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }),
       );
+
+    new Setting(containerEl)
+      .setName('Preview slide maximum width')
+      .setDesc('Maximum width of preview slides in edit mode.')
+      .addDropdown((d) =>
+        d
+          .addOption('editor', 'Match editor line width (default)')
+          .addOption('800px', '800px')
+          .addOption('1000px', '1000px')
+          .addOption('full', 'Full width (100%)')
+          .addOption('custom', 'Custom width...')
+          .setValue(this.plugin.settings.editPreviewMaxWidth)
+          .onChange(async (v: EditPreviewMaxWidth) => {
+            customSetting.settingEl.style.display = v === 'custom' ? '' : 'none';
+            this.plugin.settings.editPreviewMaxWidth = v;
+            await this.plugin.saveSettings();
+            this.plugin.refreshActiveEditors();
+          }),
+      );
+
+    const customSetting = new Setting(containerEl)
+      .setName('Custom maximum width')
+      .setDesc('Specify any CSS width (e.g. 850px, 50rem, 75%).')
+      .addText((text) =>
+        text
+          .setPlaceholder('e.g. 850px')
+          .setValue(this.plugin.settings.customEditPreviewWidth)
+          .onChange(async (v) => {
+            this.plugin.settings.customEditPreviewWidth = v;
+            await this.plugin.saveSettings();
+            this.plugin.refreshActiveEditors();
+          }),
+      );
+
+    customSetting.settingEl.style.display =
+      this.plugin.settings.editPreviewMaxWidth === 'custom' ? '' : 'none';
 
     new Setting(containerEl)
       .setName('Full preview in reading mode')

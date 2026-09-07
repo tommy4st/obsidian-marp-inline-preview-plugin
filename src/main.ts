@@ -19,6 +19,7 @@ export default class MarpInlinePreviewPlugin extends Plugin {
 
   async onload(): Promise<void> {
     await this.loadSettings();
+    this.applyEditPreviewWidth();
 
     this.engine = new MarpEngine({ math: this.settings.math === 'off' ? false : 'katex' });
     this.themes = new ThemeResolver(this.app, this.engine);
@@ -178,15 +179,38 @@ export default class MarpInlinePreviewPlugin extends Plugin {
 
 
   onunload(): void {
-    // All registrations are auto-cleaned by Obsidian.
+    document.body.style.removeProperty('--marp-edit-preview-max-width');
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loaded = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
+    if (loaded && typeof loaded.limitEditPreviewWidth === 'boolean' && !loaded.editPreviewMaxWidth) {
+      this.settings.editPreviewMaxWidth = loaded.limitEditPreviewWidth ? 'editor' : 'full';
+    }
   }
 
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
+    this.applyEditPreviewWidth();
+  }
+
+  applyEditPreviewWidth(): void {
+    const { editPreviewMaxWidth, customEditPreviewWidth } = this.settings;
+    const width =
+      editPreviewMaxWidth === 'custom'
+        ? customEditPreviewWidth?.trim()
+        : editPreviewMaxWidth === 'full'
+          ? '100%'
+          : editPreviewMaxWidth === 'editor'
+            ? ''
+            : editPreviewMaxWidth;
+
+    if (width) {
+      document.body.style.setProperty('--marp-edit-preview-max-width', width);
+    } else {
+      document.body.style.removeProperty('--marp-edit-preview-max-width');
+    }
   }
 
   rebuildEngine(): void {
@@ -197,7 +221,7 @@ export default class MarpInlinePreviewPlugin extends Plugin {
   }
 
   /** Ask every open editor's worker ViewPlugin to recompute slide widgets. */
-  private refreshActiveEditors(): void {
+  refreshActiveEditors(): void {
     this.app.workspace.iterateAllLeaves((leaf) => {
       const v = leaf.view;
       if (v instanceof MarkdownView) {

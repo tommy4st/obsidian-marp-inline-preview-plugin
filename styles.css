@@ -42,8 +42,9 @@
 .marp-slide-placeholder {
   display: block;
   width: 100%;
+  max-width: var(--marp-edit-preview-max-width, var(--line-width-adaptive, var(--line-width, var(--file-line-width, 700px))));
   aspect-ratio: 16 / 9;
-  margin: 0.5em 0 1em 0;
+  margin: 0.5em auto 1em auto;
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s, 4px);
   background: var(--background-secondary);
