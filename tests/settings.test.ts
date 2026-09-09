@@ -120,3 +120,31 @@ describe('Settings — editPreviewMaxWidth', () => {
     expect(document.body.style.getPropertyValue('--marp-edit-preview-max-width')).toBe('800px');
   });
 });
+
+describe('Settings — laser pointer duration', () => {
+  it('defaults to 1.5s and updates when entering seconds', async () => {
+    expect(DEFAULT_SETTINGS.laserDecayDuration).toBe(1.5);
+
+    const plugin: any = {
+      settings: { ...DEFAULT_SETTINGS },
+      saveSettings: vi.fn().mockResolvedValue(undefined),
+    };
+    const container = document.createElement('div');
+    const tab = new MarpSettingTab({} as any, plugin);
+    (tab as any).containerEl = container;
+    tab.display();
+
+    const item = Array.from(container.querySelectorAll('.setting-item')).find((el) =>
+      el.textContent?.includes('Laser pointer decay duration'),
+    );
+    const input = item?.querySelector('input[type="text"]') as HTMLInputElement;
+    expect(input.value).toBe('1.5');
+
+    input.value = '2.5';
+    input.dispatchEvent(new Event('input'));
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(plugin.settings.laserDecayDuration).toBe(2.5);
+    expect(plugin.saveSettings).toHaveBeenCalled();
+  });
+});

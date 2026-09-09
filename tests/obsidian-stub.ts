@@ -221,6 +221,7 @@ export class Setting {
       if (changeCb) changeCb(input.value);
     });
     const textComponent = {
+      inputEl: input,
       setValue: (v: string) => {
         input.value = v;
         return textComponent;

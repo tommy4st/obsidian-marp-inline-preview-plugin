@@ -12,12 +12,7 @@ import {
 } from './types';
 import { openPresenterView } from './service';
 
-interface LaserPoint {
-  x: number;
-  y: number;
-  time: number;
-  newStroke?: boolean;
-}
+import { LaserPointer, createExcalidrawLaserTrail } from './laserPointer';
 
 export class MarpPresentationView extends ItemView {
   public file: TFile | null = null;
@@ -36,8 +31,8 @@ export class MarpPresentationView extends ItemView {
 
   public isLaserActive = false;
   private isLaserDrawing = false;
-  private laserPoints: LaserPoint[] = [];
-  private laserCursorPos: { x: number; y: number } | null = null;
+  private currentTrail: LaserPointer | null = null;
+  private pastTrails: LaserPointer[] = [];
   private laserAnimId: number | null = null;
 
   private unsubs: Array<() => void> = [];
@@ -117,7 +112,20 @@ export class MarpPresentationView extends ItemView {
     this.registerEvent(fileModifyRef);
 
     if (Platform.isDesktop && this.isPopout()) {
-      setTimeout(() => void this.enterFullscreen(), 50);
+      void this.enterFullscreen();
+      const win = contentEl.ownerDocument?.defaultView || window;
+      const onFocusOrClick = () => {
+        const doc = contentEl.ownerDocument || document;
+        if (!doc.fullscreenElement) {
+          void this.enterFullscreen();
+        }
+      };
+      win.addEventListener('focus', onFocusOrClick);
+      contentEl.addEventListener('pointerdown', onFocusOrClick);
+      this.unsubs.push(() => {
+        win.removeEventListener('focus', onFocusOrClick);
+        contentEl.removeEventListener('pointerdown', onFocusOrClick);
+      });
     }
 
     const focusView = () => {
@@ -133,6 +141,7 @@ export class MarpPresentationView extends ItemView {
   }
 
   async onClose(): Promise<void> {
+    void this.exitFullscreen();
     this.cleanup();
   }
 
@@ -206,8 +215,9 @@ export class MarpPresentationView extends ItemView {
         const rect = this.laserCanvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        this.laserCursorPos = { x, y };
-        this.laserPoints.push({ x, y, time: performance.now(), newStroke: true });
+
+        this.currentTrail = createExcalidrawLaserTrail(4, this.plugin.settings.laserDecayDuration);
+        this.currentTrail.addPoint([x, y, performance.now()]);
         this.startLaserAnimation();
         try {
           container.setPointerCapture?.(e.pointerId);
@@ -217,13 +227,13 @@ export class MarpPresentationView extends ItemView {
 
     const onPointerMove = (e: PointerEvent) => {
       this.showHudTemporarily();
-      if (this.isLaserActive) {
+      if (this.isLaserActive && this.isLaserDrawing && this.currentTrail) {
         const rect = this.laserCanvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        this.laserCursorPos = { x, y };
-        if (this.isLaserDrawing) {
-          this.laserPoints.push({ x, y, time: performance.now() });
+        const events = (e as any).getCoalescedEvents?.() || [e];
+        for (const evt of events) {
+          const x = evt.clientX - rect.left;
+          const y = evt.clientY - rect.top;
+          this.currentTrail.addPoint([x, y, performance.now()]);
         }
         this.startLaserAnimation();
       }
@@ -232,6 +242,13 @@ export class MarpPresentationView extends ItemView {
     const onPointerUp = (e: PointerEvent) => {
       if (this.isLaserDrawing) {
         this.isLaserDrawing = false;
+        if (this.currentTrail) {
+          this.currentTrail.close();
+          this.currentTrail.options.keepHead = false;
+          this.pastTrails.push(this.currentTrail);
+          this.currentTrail = null;
+          this.startLaserAnimation();
+        }
         try {
           if (container.hasPointerCapture?.(e.pointerId)) {
             container.releasePointerCapture(e.pointerId);
@@ -241,11 +258,15 @@ export class MarpPresentationView extends ItemView {
     };
 
     const onPointerLeave = () => {
+      if (this.isLaserDrawing && this.currentTrail) {
+        this.currentTrail.close();
+        this.currentTrail.options.keepHead = false;
+        this.pastTrails.push(this.currentTrail);
+        this.currentTrail = null;
+      }
       this.isLaserDrawing = false;
-      this.laserCursorPos = null;
       this.hudEl?.removeClass('is-visible');
       this.contentEl.addClass('is-cursor-hidden');
-      this.startLaserAnimation();
     };
 
     container.addEventListener('pointerdown', onPointerDown);
@@ -269,13 +290,14 @@ export class MarpPresentationView extends ItemView {
     const dpr = window.devicePixelRatio || 1;
     this.laserCanvas.width = (this.contentEl.clientWidth || window.innerWidth) * dpr;
     this.laserCanvas.height = (this.contentEl.clientHeight || window.innerHeight) * dpr;
-    if (this.isLaserActive) {
+    if (this.isLaserActive && (this.currentTrail || this.pastTrails.length > 0)) {
       this.startLaserAnimation();
     }
   };
 
   private clearLaserTrails(): void {
-    this.laserPoints = [];
+    this.currentTrail = null;
+    this.pastTrails = [];
     this.isLaserDrawing = false;
     if (this.laserCanvas) {
       const ctx = this.laserCanvas.getContext('2d');
@@ -298,46 +320,46 @@ export class MarpPresentationView extends ItemView {
 
     const dpr = window.devicePixelRatio || 1;
     ctx.clearRect(0, 0, this.laserCanvas.width, this.laserCanvas.height);
-    ctx.save();
-    ctx.scale(dpr, dpr);
 
-    const now = performance.now();
-    this.laserPoints = this.laserPoints.filter((p) => now - p.time < 1000);
-
-    // Draw fading trail
-    if (this.laserPoints.length > 1) {
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      for (let i = 1; i < this.laserPoints.length; i++) {
-        const p1 = this.laserPoints[i];
-        if (p1.newStroke) continue;
-        const p0 = this.laserPoints[i - 1];
-        const alpha = Math.max(0, 1 - (now - p1.time) / 1000);
-        ctx.lineWidth = Math.max(1, 4 * alpha);
-        ctx.strokeStyle = `rgba(255, 34, 34, ${alpha})`;
-        ctx.beginPath();
-        ctx.moveTo(p0.x, p0.y);
-        ctx.lineTo(p1.x, p1.y);
-        ctx.stroke();
-      }
+    const trails: LaserPointer[] = [...this.pastTrails];
+    if (this.currentTrail) {
+      trails.push(this.currentTrail);
     }
 
-    // Draw blurred red dot
-    const isCursorHidden = this.contentEl.classList.contains('is-cursor-hidden');
-    if (this.laserCursorPos && this.isLaserActive && !isCursorHidden) {
-      const { x, y } = this.laserCursorPos;
-      ctx.shadowColor = '#ff0000';
-      ctx.shadowBlur = 8;
-      ctx.fillStyle = '#ff2222';
+    if (trails.length === 0) return;
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = '#ff2222';
+
+    for (const trail of trails) {
+      const outline = trail.getStrokeOutline();
+      const len = outline.length;
+      if (len < 3) continue;
+
       ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      let a = outline[0];
+      let b = outline[1];
+      const c = outline[2];
+      ctx.moveTo(a[0], a[1]);
+      ctx.quadraticCurveTo(b[0], b[1], (b[0] + c[0]) / 2, (b[1] + c[1]) / 2);
+
+      for (let i = 2; i < len - 1; i++) {
+        a = outline[i];
+        b = outline[i + 1];
+        ctx.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+      }
+      ctx.closePath();
       ctx.fill();
     }
 
     ctx.restore();
 
-    const hasVisibleCursor = this.isLaserActive && this.laserCursorPos !== null && !isCursorHidden;
-    if (this.laserPoints.length > 0 || hasVisibleCursor) {
+    this.pastTrails = this.pastTrails.filter((t) => t.getStrokeOutline().length > 0);
+
+    if (this.pastTrails.length > 0 || this.currentTrail !== null) {
       this.laserAnimId = requestAnimationFrame(() => this.drawLaser());
     }
   }
@@ -351,13 +373,10 @@ export class MarpPresentationView extends ItemView {
 
     if (!this.isLaserActive) {
       this.clearLaserTrails();
-      this.laserCursorPos = null;
       if (this.laserAnimId !== null) {
         cancelAnimationFrame(this.laserAnimId);
         this.laserAnimId = null;
       }
-    } else {
-      this.startLaserAnimation();
     }
   }
 
@@ -399,7 +418,7 @@ export class MarpPresentationView extends ItemView {
 
     createIconButton(this.hudEl, 'marp-presentation-hud-btn', 'x', 'Exit Presentation (Esc)', (e) => {
       e.stopPropagation();
-      this.leaf.detach();
+      void this.exitPresentation();
     });
 
     container.addEventListener('mousemove', () => this.showHudTemporarily());
@@ -410,9 +429,6 @@ export class MarpPresentationView extends ItemView {
     if (!this.hudEl) return;
     this.hudEl.addClass('is-visible');
     this.contentEl.removeClass('is-cursor-hidden');
-    if (this.isLaserActive) {
-      this.startLaserAnimation();
-    }
     if (this.hudHideTimeout) clearTimeout(this.hudHideTimeout);
     this.hudHideTimeout = setTimeout(() => {
       try {
@@ -423,9 +439,6 @@ export class MarpPresentationView extends ItemView {
       } catch {}
       this.hudEl.removeClass('is-visible');
       this.contentEl.addClass('is-cursor-hidden');
-      if (this.isLaserActive) {
-        this.startLaserAnimation();
-      }
     }, 2500);
   }
 
@@ -495,7 +508,7 @@ export class MarpPresentationView extends ItemView {
           if (this.isLaserActive) {
             this.toggleLaserPointer();
           } else {
-            this.leaf.detach();
+            void this.exitPresentation();
           }
           break;
       }
@@ -589,13 +602,19 @@ export class MarpPresentationView extends ItemView {
     return doc !== undefined && doc !== document;
   }
 
-  public async enterFullscreen(): Promise<void> {
+  public async enterFullscreen(retries = 6): Promise<boolean> {
     try {
       const doc = this.containerEl.ownerDocument || document;
-      if (!doc.fullscreenElement) {
-        await this.containerEl.requestFullscreen();
+      if (doc.fullscreenElement) return true;
+      await this.containerEl.requestFullscreen();
+      return true;
+    } catch {
+      if (retries > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return this.enterFullscreen(retries - 1);
       }
-    } catch {}
+      return false;
+    }
   }
 
   public async exitFullscreen(): Promise<void> {
@@ -605,6 +624,11 @@ export class MarpPresentationView extends ItemView {
         await doc.exitFullscreen();
       }
     } catch {}
+  }
+
+  public async exitPresentation(): Promise<void> {
+    await this.exitFullscreen();
+    this.leaf.detach();
   }
 
   private toggleFullscreen(): void {

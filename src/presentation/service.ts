@@ -69,23 +69,31 @@ export async function startPresentation(
   file: TFile,
   options?: PresentationLaunchOptions,
 ): Promise<WorkspaceLeaf> {
+  // Clean up any stale or lingering presentation leaves first
+  const existingLeaves = app.workspace.getLeavesOfType?.(MARP_PRESENTATION_VIEW_TYPE) ?? [];
+  for (const oldLeaf of existingLeaves) {
+    try {
+      const oldView = oldLeaf.view as MarpPresentationView;
+      if (typeof oldView?.exitFullscreen === 'function') {
+        void oldView.exitFullscreen();
+      }
+      oldLeaf.detach();
+    } catch {}
+  }
+
   const otherBounds = getOtherDisplayBounds();
   let leaf: WorkspaceLeaf;
 
   if (Platform.isDesktop) {
-    if (otherBounds) {
-      const initData: WorkspaceWindowInitData = {
-        x: otherBounds.x,
-        y: otherBounds.y,
-        size: {
-          width: otherBounds.width,
-          height: otherBounds.height,
-        },
-      };
-      leaf = app.workspace.openPopoutLeaf(initData);
-    } else {
-      leaf = app.workspace.openPopoutLeaf();
-    }
+    const initData: WorkspaceWindowInitData = otherBounds ?? {
+      x: window.screenX ?? 0,
+      y: window.screenY ?? 0,
+      size: {
+        width: window.screen.width,
+        height: window.screen.height,
+      },
+    };
+    leaf = app.workspace.openPopoutLeaf(initData);
   } else {
     // Mobile fallback: open in tab
     leaf = app.workspace.getLeaf('tab');
@@ -106,7 +114,6 @@ export async function startPresentation(
   if (presView) {
     if (typeof presView.enterFullscreen === 'function') {
       void presView.enterFullscreen();
-      setTimeout(() => void presView.enterFullscreen(), 100);
     }
     const doc = presView.containerEl?.ownerDocument;
     doc?.defaultView?.focus();
@@ -114,7 +121,10 @@ export async function startPresentation(
     setTimeout(() => {
       doc?.defaultView?.focus();
       presView.contentEl?.focus();
-    }, 100);
+      if (typeof presView.enterFullscreen === 'function') {
+        void presView.enterFullscreen();
+      }
+    }, 150);
   }
 
   // If user configured to automatically open presenter view in an Obsidian tab

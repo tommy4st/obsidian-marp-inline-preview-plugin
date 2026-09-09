@@ -21,6 +21,7 @@ export interface MarpSettings {
   exportOpenAfter: boolean;
   exportImageQuality: ExportImageQuality;
   autoOpenPresenterView: boolean;
+  laserDecayDuration: number;
 }
 
 export const DEFAULT_SETTINGS: MarpSettings = {
@@ -33,6 +34,7 @@ export const DEFAULT_SETTINGS: MarpSettings = {
   exportOpenAfter: true,
   exportImageQuality: 'medium',
   autoOpenPresenterView: false,
+  laserDecayDuration: 1.5,
 };
 
 
@@ -171,6 +173,22 @@ export class MarpSettingTab extends PluginSettingTab {
           this.plugin.settings.autoOpenPresenterView = v;
           await this.plugin.saveSettings();
         }),
+      );
+
+    new Setting(containerEl)
+      .setName('Laser pointer decay duration')
+      .setDesc('Duration in seconds the laser stroke remains visible before fading.')
+      .addText((text) =>
+        text
+          .setPlaceholder('1.5')
+          .setValue(String(this.plugin.settings.laserDecayDuration))
+          .onChange(async (v) => {
+            const num = parseFloat(v);
+            if (num > 0) {
+              this.plugin.settings.laserDecayDuration = num;
+              await this.plugin.saveSettings();
+            }
+          }),
       );
   }
 }
