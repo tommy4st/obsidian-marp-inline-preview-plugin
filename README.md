@@ -1,22 +1,25 @@
-# Marp Inline Preview for Obsidian
+# Marp Inline Preview Plus for Obsidian
 
 Render [Marp](https://marp.app/) slide decks directly inside Obsidian — inline beneath each `---` slide separator while editing, and as the full deck in reading mode. Works on desktop and mobile.
 
 | Mode | What you see |
 | --- | --- |
-| **Edit / Live Preview** | A rendered slide widget appears under each slide break. Updates as you type, with a configurable debounce. |
+| **Edit / Live Preview** | A rendered slide widget appears under each slide break. Updates as you type. |
 | **Reading** | The entire page is replaced by the rendered Marp deck. |
 
 Only files whose YAML frontmatter contains `marp: true` are touched. Everything else renders as ordinary Markdown.
 
 ## Features
 
-- Marp Core 4 under the hood — same renderer as the official Marp tooling, in pure JavaScript so it works on Obsidian Mobile (iOS & Android).
-- Zero-external-dependency PDF export on desktop — exports vector PDFs with slide dimensions, optional presenter note annotations, and configurable image DPI downsampling without requiring Chrome or external CLI tools.
-- Custom theme support through `.marprc.yml` (vault-root, with a fallback to the slide file's folder), plus the standard frontmatter `theme:` directive.
-- KaTeX math is bundled — no network roundtrips, no broken formulae offline.
-- Marp's per-slide CSS is mounted inside Shadow DOM, so it can't leak into Obsidian's own UI.
-- Pluggable: toggle the edit-mode preview, reading-mode preview, math support, and debounce interval from Settings.
+- **Marp Core 4 under the hood** — same renderer as the official Marp tooling, in pure JavaScript so it works on Obsidian Mobile (iOS & Android).
+- **Presentation & Presenter Views** — dual-screen audience presentation with auto-scaling, keyboard/touch navigation, screen blanking, an Excalidraw-style streamlined laser pointer with adjustable decay duration, and a dedicated speaker dashboard (timer, clock, upcoming slide preview, markdown notes, two-way sync).
+- **Zero-external-dependency PDF export on desktop** — exports vector PDFs with slide dimensions, optional presenter note annotations, and configurable image DPI downsampling presets without requiring Chrome or external CLI tools.
+- **Customizable edit preview width** — configure the maximum width of inline slide widgets (match editor line width, 800px, 1000px, full width 100%, or custom CSS dimensions).
+- **Vault images & background support** — vault-relative paths in Markdown images (`![](...)`), Marp background images (`![bg](...)`), and custom stylesheet URLs are automatically rewritten to Obsidian resource URLs.
+- **Custom theme support** through `.marprc.yml` (vault-root, with a fallback to the slide file's folder), plus the standard frontmatter `theme:` directive.
+- **Bundled KaTeX math** — no network roundtrips, no broken formulae offline.
+- **Encapsulated styles** — Marp's per-slide CSS is mounted inside Shadow DOM, so it can't leak into Obsidian's own UI.
+- **Pluggable settings** — configure edit/reading previews, preview width, math rendering, PDF export options, presentation defaults, and laser pointer decay duration from Settings.
 
 ## Quick start
 
@@ -29,12 +32,21 @@ theme: default
 # My deck
 
 - Slide one
+- Beautiful presentations directly in Obsidian
+
+<!-- Speaker notes appear in Presenter View and PDF export annotations! -->
 
 ---
 
+<!-- _class: lead -->
+
 ## Slide two
 
-That's it.
+![bg right:40%](attachments/photo.jpg)
+
+- Supports vault-relative images and backgrounds (`![bg](...)`)
+- Custom CSS styles and themes
+- Bundled KaTeX math: $e^{i\pi} + 1 = 0$
 ```
 
 Save the file. Switch between edit and reading mode to see the previews.
@@ -89,7 +101,7 @@ Present your slide deck directly within Obsidian or across dual monitors with a 
 - **Audience Presentation View**:
   - Automatically launches in fullscreen (on the second screen when dual displays are detected, leaving your main Obsidian window free).
   - Maintains 16:9 aspect ratio with auto-scaling and letterboxing.
-  - Laser pointer tool: press `L` or click the laser icon in the HUD to toggle a simple blurred red laser dot. Click and drag to draw smooth fading trails without accidentally advancing slides.
+  - **Laser pointer tool**: press `L` or click the laser icon in the HUD to toggle a streamlined laser pointer (adapted from Excalidraw's laser algorithm). Click and drag to draw smooth glowing trails with dynamic pressure response that fade over time. The decay duration can be customized in Settings.
   - Auto-hiding HUD toolbar with slide progress, laser pointer toggle, and navigation buttons.
   - Keyboard navigation: `Space` / `ArrowRight` / `PageDown` to advance; `ArrowLeft` / `PageUp` to go back; `Home` / `End` for first/last slide.
   - Screen blanking: press `B` or `.` for blackout, `W` for whiteout.
@@ -99,7 +111,7 @@ Present your slide deck directly within Obsidian or across dual monitors with a 
 
 
 - **Presenter View (Speaker Dashboard)**:
-  - Opens conveniently in an Obsidian tab by pressing `P` or selecting **Marp: Open presenter view**.
+  - Opens conveniently in an Obsidian tab by pressing `P` or selecting **Marp: Open presenter view** (or right-clicking the note and choosing **Open Marp presenter view**).
   - **Current & Next Slide Previews**: See what the audience sees plus an upcoming preview of the next slide.
   - **Rich Speaker Notes**: Slide comments (`<!-- ... -->`) are rendered as formatted Markdown with adjustable font sizes (`A-` / `A+`).
   - **Timer & Wall Clock**: Built-in stopwatch with Start/Pause/Reset controls plus local wall clock.
@@ -110,22 +122,32 @@ Present your slide deck directly within Obsidian or across dual monitors with a 
 ## Settings
 
 ### Preview & Math
-- **Inline preview in edit mode** — toggle the CodeMirror widget.
-- **Full preview in reading mode** — toggle the deck render.
+- **Inline preview in edit mode** — toggle the CodeMirror slide widgets.
+- **Preview slide maximum width** — choose the maximum width of preview slides in edit mode (`Match editor line width (default)`, `800px`, `1000px`, `Full width (100%)`, or `Custom width...`).
+- **Custom maximum width** — specify any CSS width (e.g. `850px`, `50rem`, `75%`) when "Custom width..." is chosen.
+- **Full preview in reading mode** — toggle the full deck render in reading mode.
 - **Math rendering** — `KaTeX` (bundled) or `Off`.
 
-### Presentation
-- **Auto-open presenter view** — automatically open the Presenter View in a separate window when starting a presentation (Desktop only).
-
 ### PDF Export
-
-- **Include presenter notes** — default toggle for embedding speaker note annotations.
-- **Open PDF after export** — default toggle for auto-opening exported PDFs.
+- **Include presenter notes** — add presenter notes as PDF sticky note annotations by default.
+- **Open PDF after export** — open the exported PDF in Obsidian by default after completion.
 - **Default image quality / DPI** — default raster image downsampling preset (`Original`, `High`, `Medium`, or `Low`).
 
+### Presentation
+- **Auto-open presenter view** — automatically open the Presenter View in an Obsidian tab when starting a presentation (Desktop only).
+- **Laser pointer decay duration** — duration in seconds that laser pointer strokes remain visible before fading (default: `1.5` seconds).
+
 ### Commands
-- `Marp Inline Preview: Refresh Marp previews` — forces a full reload of previews and themes.
-- `Marp: Export slide deck to PDF...` — opens the PDF export dialog for the active Marp note.
+- `Marp: Refresh Marp previews` — forces a full reload of previews and custom themes.
+- `Marp: Start presentation` — launches the presentation view (in fullscreen popout window on secondary monitor if available on Desktop, or tab on Mobile).
+- `Marp: Open presenter view` — opens the speaker dashboard companion tab.
+- `Marp: Export slide deck to PDF...` — opens the PDF export dialog for the active Marp note (Desktop only).
+
+### Context Menu Actions
+Right-clicking any note with `marp: true` in its frontmatter provides:
+- **Start Marp presentation**
+- **Open Marp presenter view**
+- **Export Marp to PDF...** (Desktop only)
 
 ## Install: build locally and copy into another vault
 
@@ -152,16 +174,19 @@ styles.css     # host-side styles (checked in)
 
 ### 2. Find the target vault's plugin folder
 
-Inside your Obsidian vault there is a hidden `.obsidian/` directory. Plugins live under `.obsidian/plugins/<plugin-id>/`. For this plugin the folder is `marp-inline-preview`.
+Inside your Obsidian vault there is a hidden `.obsidian/` directory. Plugins live under `.obsidian/plugins/<plugin-id>/`. For this plugin the folder is `marp-inline-preview-plus`.
+
+> [!NOTE]
+> If you are migrating from the earlier `marp-inline-preview` plugin, disable it first and replace the folder with `marp-inline-preview-plus`.
 
 Typical full paths:
 
 | OS | Example path |
 |---|---|
-| macOS / Linux | `/path/to/MyVault/.obsidian/plugins/marp-inline-preview/` |
-| Windows | `C:\Users\you\Documents\MyVault\.obsidian\plugins\marp-inline-preview\` |
-| iOS | `On My iPhone → Obsidian → MyVault → .obsidian → plugins → marp-inline-preview` (Files.app, "Show Hidden Files" on) |
-| Android | `/storage/emulated/0/MyVault/.obsidian/plugins/marp-inline-preview/` (any file manager) |
+| macOS / Linux | `/path/to/MyVault/.obsidian/plugins/marp-inline-preview-plus/` |
+| Windows | `C:\Users\you\Documents\MyVault\.obsidian\plugins\marp-inline-preview-plus\` |
+| iOS | `On My iPhone → Obsidian → MyVault → .obsidian → plugins → marp-inline-preview-plus` (Files.app, "Show Hidden Files" on) |
+| Android | `/storage/emulated/0/MyVault/.obsidian/plugins/marp-inline-preview-plus/` (any file manager) |
 
 Create the directory if it doesn't exist yet.
 
@@ -172,15 +197,15 @@ From the repo root, with `TARGET_VAULT` set to your vault directory:
 ```bash
 # macOS / Linux
 TARGET_VAULT="/path/to/MyVault"
-mkdir -p "$TARGET_VAULT/.obsidian/plugins/marp-inline-preview"
-cp main.js manifest.json styles.css "$TARGET_VAULT/.obsidian/plugins/marp-inline-preview/"
+mkdir -p "$TARGET_VAULT/.obsidian/plugins/marp-inline-preview-plus"
+cp main.js manifest.json styles.css "$TARGET_VAULT/.obsidian/plugins/marp-inline-preview-plus/"
 ```
 
 ```powershell
 # Windows PowerShell
 $TARGET_VAULT = "C:\Users\you\Documents\MyVault"
-New-Item -ItemType Directory -Force -Path "$TARGET_VAULT\.obsidian\plugins\marp-inline-preview" | Out-Null
-Copy-Item main.js, manifest.json, styles.css "$TARGET_VAULT\.obsidian\plugins\marp-inline-preview\"
+New-Item -ItemType Directory -Force -Path "$TARGET_VAULT\.obsidian\plugins\marp-inline-preview-plus" | Out-Null
+Copy-Item main.js, manifest.json, styles.css "$TARGET_VAULT\.obsidian\plugins\marp-inline-preview-plus\"
 ```
 
 On mobile, sync the three files via iCloud / Obsidian Sync / a USB transfer to the same path. Obsidian Sync replicates `.obsidian/plugins/` automatically if you enable it.
@@ -190,7 +215,7 @@ On mobile, sync the three files via iCloud / Obsidian Sync / a USB transfer to t
 1. Open the target vault.
 2. **Settings → Community plugins**. If you see "Restricted mode", turn it off.
 3. Reload the plugin list (the circular-arrow icon next to "Installed plugins"), or run **Reload app without saving** from the command palette.
-4. Toggle **Marp Inline Preview** on.
+4. Toggle **Marp Inline Preview Plus** on.
 
 Open a markdown file with `marp: true` in its frontmatter — you should see slide widgets in edit mode and the full deck in reading mode.
 
@@ -200,7 +225,7 @@ Re-run `npm run build`, then re-copy the same three files (step 3) and reload Ob
 
 ### Uninstalling
 
-Disable the plugin in Settings → Community plugins, then delete `<vault>/.obsidian/plugins/marp-inline-preview/`.
+Disable the plugin in Settings → Community plugins, then delete `<vault>/.obsidian/plugins/marp-inline-preview-plus/`.
 
 ## Development
 
@@ -212,6 +237,14 @@ npm run dev:vault    # symlinks build outputs into test-vault/ and starts esbuil
 Then in Obsidian: `File → Open vault…` and pick the `test-vault/` folder in this repo. Enable the plugin and open one of the files in `slides/`.
 
 `npm run build` produces a production bundle (~1.9 MB).
+
+Available scripts:
+- `npm run dev` — runs esbuild in watch mode.
+- `npm run dev:vault` — links plugin files into `test-vault/.obsidian/plugins/` and starts watch mode.
+- `npm run build` — type checks and builds production bundle (`main.js`).
+- `npm test` — runs Vitest test suites (unit, DOM, snapshots, bundle smoke).
+- `npm run test:bundle` — validates bundle compatibility with `check-bundle.mjs` and `es-check`.
+- `npm run ci` — runs type checks, build, test suites, and bundle checks.
 
 Project layout:
 
@@ -226,6 +259,13 @@ src/
 │   ├── exportModal.ts   Export options modal dialog
 │   ├── template.ts      Printable HTML payload builder
 │   └── types.ts         Export options and presets
+├── presentation/        Presentation & Presenter View subsystem
+│   ├── service.ts       Launch orchestration & multi-display window management
+│   ├── session.ts       Bidirectional state synchronization & event bus
+│   ├── presentationView.ts Fullscreen audience display view & HUD
+│   ├── presenterView.ts Speaker dashboard (notes, timer, upcoming slide)
+│   ├── laserPointer.ts  Streamlined laser pointer math & stroke outline generator
+│   └── types.ts         Presentation state & view interfaces
 ├── marp/
 │   ├── engine.ts        Marp Core wrapper (themes, render helpers, comments)
 │   ├── themes.ts        .marprc.yml discovery and theme registration
@@ -240,7 +280,7 @@ src/
     ├── debounce.ts
     ├── frame.ts         Iframe mounting and layout helpers
     ├── hash.ts          FNV-1a hash
-    └── images.ts        Vault asset path rewriting
+    └── images.ts        Vault asset path & CSS background rewriting
 ```
 
 ## Mobile notes
@@ -252,7 +292,6 @@ src/
 
 ## TODO: Marp CLI parity
 
-- Rewrite relative URLs emitted in inline styles, especially Marp background images such as `![bg](...)`. Marp Core renders these as `background-image:url(...)`, while the current Obsidian preview only rewrites `<img src="...">`, so images that work in Marp CLI can disappear inside the iframe.
 - Size preview iframes from each rendered SVG's `viewBox` instead of assuming Marp's default 1280x720 slide. Decks using `size: 4:3` or custom theme `@size` rules can currently be clipped or shown with the wrong aspect ratio compared with Marp CLI output.
 - Rework theme reloads so modified custom theme CSS replaces the existing Marp Core theme registration. The current cache invalidation re-reads CSS, but Marp Core may keep the first registered theme with the same name, leaving edit/reading previews stale after theme edits.
 - Include rendered CSS or a theme revision in the reading-mode render hash. At the moment the hash is based on markdown plus theme name, so a CSS-only theme update can be skipped even after requesting a reading preview rerender.

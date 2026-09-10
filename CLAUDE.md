@@ -51,7 +51,7 @@ Layer details live in `/Users/sotetsuk/.claude/plans/marp-cli-editing-running-mo
 
 ## Versions to keep pinned
 
-- `@marp-team/marp-core` — exact pin in `package.json` (currently `4.3.0`). L2 snapshots assume this. Bump = re-bless snapshots in the same commit.
+- `@marp-team/marp-core` — exact pin in `package.json` (currently `4.4.0`). L2 snapshots assume this. Bump = re-bless snapshots in the same commit.
 - `es-check`, `happy-dom`, `wdio-obsidian-service`, `webdriverio` — exact pins to keep CI deterministic.
 
 ## Release flow

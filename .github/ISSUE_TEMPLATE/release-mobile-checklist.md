@@ -18,7 +18,7 @@ not publish until this issue is closed.
 
 Device: <!-- e.g. iPhone 14, iOS 18.5 -->
 
-- [ ] Plugin enables without error after installing the built `main.js`/`manifest.json`/`styles.css` into `.obsidian/plugins/marp-inline-preview/` in the test vault
+- [ ] Plugin enables without error after installing the built `main.js`/`manifest.json`/`styles.css` into `.obsidian/plugins/marp-inline-preview-plus/` in the test vault
 - [ ] Opening `deck.md` in editing mode renders one slide per `---` boundary
 - [ ] Adding a slide via `---` produces a new iframe in place (no full reload visible)
 - [ ] Removing a slide shrinks the deck cleanly

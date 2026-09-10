@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,8 +25,10 @@ jobs:
 
       - run: npm ci
 
-      - name: Type-check
-        run: npm run check:types
+      - name: Type-check (src + e2e)
+        run: |
+          npm run check:types
+          npm run check:types:e2e
 
       - name: Build (also feeds bundle smoke + L0 guards)
         run: npm run build

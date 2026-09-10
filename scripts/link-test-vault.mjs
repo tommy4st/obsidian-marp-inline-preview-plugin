@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Symlink the plugin's build artifacts into test-vault/.obsidian/plugins/marp-inline-preview/
+// Symlink the plugin's build artifacts into test-vault/.obsidian/plugins/marp-inline-preview-plus/
 // so that `npm run dev` rewrites them in place and Obsidian picks up changes after a reload.
 
 import fs from 'node:fs';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
-const target = path.join(repoRoot, 'test-vault', '.obsidian', 'plugins', 'marp-inline-preview');
+const target = path.join(repoRoot, 'test-vault', '.obsidian', 'plugins', 'marp-inline-preview-plus');
 
 fs.mkdirSync(path.dirname(target), { recursive: true });
 
@@ -45,4 +45,4 @@ for (const file of filesToLink) {
 }
 
 console.log(`\nPlugin directory: ${target}`);
-console.log('Open ./test-vault in Obsidian and enable "Marp Inline Preview" under Community plugins.');
+console.log('Open ./test-vault in Obsidian and enable "Marp Inline Preview Plus" under Community plugins.');
